@@ -20,10 +20,12 @@ def train(hyperparams, run_id, base_log_dir, base_model_dir):
     model = PPO(
         "MlpPolicy", 
         env, 
-        verbose=1, 
+        # verbose=1, 
         tensorboard_log=log_dir, 
         **hyperparams
     )
+
+    print(f"Training run id:{run_id}")
     
     # training loop
     episodes = 0
@@ -56,16 +58,25 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # suite of hyperparameter to test
-    hyperparams = [ 
-        {"learning_rate": 0.0003, "n_steps": 2048},
-        {"learning_rate": 0.0001, "n_steps": 4096},
-        {"learning_rate": 0.0005, "n_steps": 1024},
+    hyperparams = [
+        {"learning_rate": 0.0001, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
+        {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
+        {"learning_rate": 0.0005, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
+        {"learning_rate": 0.0003, "gamma":0.999, "gae_lambda":0.95, "clip_range":0.2},
+        {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
+        {"learning_rate": 0.0003, "gamma":0.96, "gae_lambda":0.95, "clip_range":0.2},
+        {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.85, "clip_range":0.2},
+        {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
+        {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.99, "clip_range":0.2},
+        {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.1},
+        {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2}, # best so far
+        {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.3}, 
     ]
 
     if args.mode == "train":
         # create log and model dirs 
         base_log_dir = "logs/humanoid/PPO"
-        base_model_dir = "humanoid_models"
+        base_model_dir = "humanoid_models/PPO"
         os.makedirs(base_log_dir, exist_ok=True)
         os.makedirs(base_model_dir, exist_ok=True)
 
@@ -82,4 +93,5 @@ if __name__ == "__main__":
         if not args.model_path:
             print("Please provide a model path for testing.")
         else:
-            test(args.model_path)
+            for i in range(10):
+                test(args.model_path)
