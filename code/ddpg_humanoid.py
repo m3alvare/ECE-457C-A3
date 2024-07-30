@@ -44,9 +44,6 @@ def train(hyperparams, run_id, base_log_dir, base_model_dir):
     model.learn(total_timesteps=TIMESTEPS)
     model.save(f"{model_dir}/DDPG_final")
 
-    # Save VecNormalize statistics
-    env.save(f"{model_dir}/vec_normalize.pkl")
-
 def test(model_path):
     env = DummyVecEnv([lambda: gym.make("Humanoid-v4", render_mode="human")])
     env = VecNormalize.load(os.path.dirname(model_path) + "/vec_normalize.pkl", env)
