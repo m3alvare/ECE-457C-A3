@@ -45,23 +45,21 @@ def train(hyperparams, run_id, base_log_dir, base_model_dir):
     model.save(f"{model_dir}/DDPG_final")
 
 def test(model_path):
-    env = DummyVecEnv([lambda: gym.make("Humanoid-v4", render_mode="human")])
-    env = VecNormalize.load(os.path.dirname(model_path) + "/vec_normalize.pkl", env)
-    env.training = False
-    env.norm_reward = False
+    env = gym.make("Humanoid-v4", render_mode="human")
 
     model = DDPG.load(model_path, env=env)
     
-    obs = env.reset()[0]
-    done = False
-    extra_steps = 250 # to see the humanoid fall 
-    while True:
-        action, _states = model.predict(obs, deterministic=True)
-        obs, reward, done, truncated, info = env.step(action)
-        if done:
-            extra_steps -= 1
-            if extra_steps == 0:
-                break
+    for i in range(10):
+        obs = env.reset()[0]
+        done = False
+        extra_steps = 100 # to see the humanoid fall 
+        while True:
+            action, _states = model.predict(obs)
+            obs, reward, done, truncated, info = env.step(action)
+            if done:
+                extra_steps -= 1
+                if extra_steps == 0:
+                    break
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train or test DDPG on Humanoid-v4")

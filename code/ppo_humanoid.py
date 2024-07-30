@@ -39,11 +39,11 @@ def test(model_path):
     env = gym.make("Humanoid-v4", render_mode="human")
     print(model_path)
     model = PPO.load(model_path, env=env)
-    
-    obs = env.reset()[0]
-    done = False
-    extra_steps = 250 # to see the humanoid fall 
+    \
     while True:
+        obs = env.reset()[0]
+        done = False
+        extra_steps = 100 # to see the humanoid fall 
         action, _states  = model.predict(obs)
         obs, reward, done, truncated, info  = env.step(action)
         if done:
