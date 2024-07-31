@@ -1,7 +1,6 @@
 import gymnasium as gym
 import os
 import argparse
-
 from multiprocessing import Process
 from stable_baselines3 import DQN
 
@@ -30,12 +29,10 @@ def train(hyperparams, run_id, base_log_dir, base_model_dir):
     
     # training loop
     episodes = 0
-    while True:
+    while episodes*TIMESTEPS <= MAXTIMESTEPS:
         episodes += 1
         model.learn(total_timesteps=TIMESTEPS, log_interval=5, reset_num_timesteps=False)
         model.save(f"{model_dir}/DQN_{TIMESTEPS*episodes}")
-        if episodes*TIMESTEPS >= MAXTIMESTEPS:
-            break;
         print(f"Training run id:{run_id}, pid: {pid}, at {episodes*TIMESTEPS}")
 
     print("Done training DQN lunar landing")

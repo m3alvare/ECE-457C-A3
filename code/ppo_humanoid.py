@@ -39,7 +39,7 @@ def test(model_path):
     env = gym.make("Humanoid-v4", render_mode="human")
     print(model_path)
     model = PPO.load(model_path, env=env)
-    \
+    
     while True:
         obs = env.reset()[0]
         done = False
@@ -62,12 +62,15 @@ if __name__ == "__main__":
         {"learning_rate": 0.0001, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
         {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
         {"learning_rate": 0.0005, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
+
         {"learning_rate": 0.0003, "gamma":0.999, "gae_lambda":0.95, "clip_range":0.2},
         {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
         {"learning_rate": 0.0003, "gamma":0.96, "gae_lambda":0.95, "clip_range":0.2},
+
         {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.85, "clip_range":0.2},
         {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2},
         {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.99, "clip_range":0.2},
+        
         {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.1},
         {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.2}, # best so far
         {"learning_rate": 0.0003, "gamma":0.99, "gae_lambda":0.95, "clip_range":0.3}, 
