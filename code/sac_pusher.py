@@ -35,10 +35,28 @@ def train(hyperparams, run_id, base_log_dir, base_model_dir):
 
     print("Done training SAC pusher")
 
+def test(model_path):
+    print("tester func called")
+    env = gym.make("Pusher-v4", render_mode="human")
+    print(model_path)
+    model = SAC.load(model_path, env=env)
+    
+    for i in range(10):
+        obs = env.reset()[0]
+        done = False
+        extra_steps = 100 # to see the humanoid fall 
+        while True:
+            action, _states  = model.predict(obs)
+            obs, reward, done, truncated, info  = env.step(action)
+            if done:
+                extra_steps -= 1
+                if extra_steps == 0:
+                    break
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train SAC on Pusher-v4 with different hyperparameters")
-    parser.add_argument("mode", choices=["train"], help="Mode to run: train")
+    parser = argparse.ArgumentParser(description="Train or test SAC on Humanoid-v4")
+    parser.add_argument("mode", choices=["train", "test"], help="Mode to run: train or test")
+    parser.add_argument("--model-path", help="Path to the model to load for testing")
     args = parser.parse_args()
 
     # Default hyperparameters
@@ -79,3 +97,8 @@ if __name__ == "__main__":
 
         for p in processes:
             p.join()
+    elif args.mode == "test":
+        if not args.model_path:
+            print("Please provide a model path for testing.")
+        else:
+            test(args.model_path)
