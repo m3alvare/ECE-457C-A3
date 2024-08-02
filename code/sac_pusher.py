@@ -6,7 +6,7 @@ from stable_baselines3 import SAC
 
 def train(hyperparams, run_id, base_log_dir, base_model_dir):
     MAXTIMESTEPS = 2000000
-    TIMESTEPS = 10000
+    TIMESTEPS = 50000
 
     log_dir = f"{base_log_dir}/run_{run_id}"
     model_dir = f"{base_model_dir}/run_{run_id}"
@@ -44,14 +44,13 @@ def test(model_path):
     for i in range(10):
         obs = env.reset()[0]
         done = False
-        extra_steps = 100 # to see the humanoid fall 
-        while True:
+        timesteps = 0 # as the learning env stops after 100 timesteps
+        while not done:
             action, _states  = model.predict(obs)
             obs, reward, done, truncated, info  = env.step(action)
-            if done:
-                extra_steps -= 1
-                if extra_steps == 0:
-                    break
+            timesteps += 1
+            if timesteps == 100:
+                break;
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train or test SAC on Humanoid-v4")
@@ -72,15 +71,15 @@ if __name__ == "__main__":
     hyperparams = [
         default_params,  # Run with default values
         {**default_params, "learning_rate": 0.0001},
-        {**default_params, "learning_rate": 0.001},
+        # {**default_params, "learning_rate": 0.001}, very unstable
         {**default_params, "gamma": 0.95},
-        {**default_params, "gamma": 0.999},
+        # {**default_params, "gamma": 0.999}, very unstable and very poor performance
         {**default_params, "buffer_size": 50000},
-        {**default_params, "buffer_size": 200000},
-        {**default_params, "batch_size": 128},
-        {**default_params, "batch_size": 512},
-        {**default_params, "tau": 0.001},
-        {**default_params, "tau": 0.01},
+        # {**default_params, "buffer_size": 200000}, unstable
+        # {**default_params, "batch_size": 128}, both unstable
+        # {**default_params, "batch_size": 512}, ^^
+        {**default_params, "tau": 0.001}, # rough start but converged like the rest and was more stable than the rest 
+        # {**default_params, "tau": 0.01}, very unstable
     ]
 
     if args.mode == "train":

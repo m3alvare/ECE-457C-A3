@@ -6,7 +6,7 @@ from multiprocessing import Process
 from stable_baselines3 import SAC
 
 def train(hyperparams, run_id, base_log_dir, base_model_dir):
-    TIMESTEPS = 10000
+    TIMESTEPS = 50000
 
     log_dir = f"{base_log_dir}/run_{run_id}"
     model_dir = f"{base_model_dir}/SAC/run_{run_id}"

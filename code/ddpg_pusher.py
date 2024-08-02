@@ -7,76 +7,94 @@ from stable_baselines3 import DDPG
 from stable_baselines3.common.noise import NormalActionNoise
 
 def train(hyperparams, run_id, base_log_dir, base_model_dir):
-    TIMESTEPS = 1_000_000  # 1 million timesteps
+    MAXTIMESTEPS = 2000000
+    TIMESTEPS = 25000
 
     log_dir = f"{base_log_dir}/run_{run_id}"
     model_dir = f"{base_model_dir}/run_{run_id}"
     os.makedirs(log_dir, exist_ok=True)
     os.makedirs(model_dir, exist_ok=True)
+    pid = os.getpid()
 
-    # Create environment
-    env = gym.make("Humanoid-v4", render_mode=None)
+    env = gym.make("Pusher-v4", render_mode=None)
     # Set up noise
     n_actions = env.action_space.shape[-1]
     action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=hyperparams['noise_std'] * np.ones(n_actions))
 
     # Remove 'noise_std' from hyperparams as it's not a direct DDPG parameter
     hyperparams.pop("noise_std")
-
-
-    # Initialize model
+    
     model = DDPG(
         "MlpPolicy", 
         env, 
         action_noise=action_noise,
-        # verbose=1, 
-        tensorboard_log=log_dir, 
+        tensorboard_log=log_dir,
         **hyperparams
     )
 
-    print(f"Training run id:{run_id}")
-
+    print(f"Training run id:{run_id}, pid: {pid}")
+    print(f"Hyperparameters: {hyperparams}")
     
-    # Training
-    # model.learn(total_timesteps=TIMESTEPS, callback=eval_callback)
-    model.learn(total_timesteps=TIMESTEPS)
-    model.save(f"{model_dir}/DDPG_final")
+    episodes = 0
+    while episodes*TIMESTEPS <= MAXTIMESTEPS:
+        episodes += 1
+        model.learn(total_timesteps=TIMESTEPS, log_interval=5, reset_num_timesteps=False)
+        model.save(f"{model_dir}/DDPG_{TIMESTEPS*episodes}")
+        print(f"Training run id:{run_id}, pid: {pid}, at {episodes*TIMESTEPS}")
+
+    print("Done training DDPG pusher")
 
 def test(model_path):
-    env = gym.make("Humanoid-v4", render_mode="human")
-
+    print("tester func called")
+    env = gym.make("Pusher-v4", render_mode="human")
+    print(model_path)
     model = DDPG.load(model_path, env=env)
     
     for i in range(10):
         obs = env.reset()[0]
         done = False
-        extra_steps = 100 # to see the humanoid fall 
-        while True:
+        timesteps = 0 # as the learning env stops after 100 timesteps
+        while not done:
             action, _states = model.predict(obs)
             obs, reward, done, truncated, info = env.step(action)
-            if done:
-                extra_steps -= 1
-                if extra_steps == 0:
-                    break
+            timesteps += 1
+            if timesteps == 100:
+                break
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train or test DDPG on Humanoid-v4")
+    parser = argparse.ArgumentParser(description="Train or test DDPG on Pusher-v4")
     parser.add_argument("mode", choices=["train", "test"], help="Mode to run: train or test")
     parser.add_argument("--model-path", help="Path to the model to load for testing")
     args = parser.parse_args()
 
-    # Hyperparameter configurations to test
-    hyperparams = [ 
-        {"learning_rate": 1e-3, "gamma": 0.98, "buffer_size": 100000, "noise_std": 0.1},
-        {"learning_rate": 1e-4, "gamma": 0.99, "buffer_size": 200000, "noise_std": 0.2},
-        {"learning_rate": 5e-4, "gamma": 0.995, "buffer_size": 150000, "noise_std": 0.15},
-        {"learning_rate": 1e-3, "gamma": 0.99, "buffer_size": 200000, "noise_std": 0.1, "batch_size": 128},
-        {"learning_rate": 1e-4, "gamma": 0.98, "buffer_size": 100000, "noise_std": 0.2, "batch_size": 64},
+    default_params = {
+        "learning_rate": 0.001,
+        "gamma": 0.99,
+        "buffer_size": 100000,
+        "batch_size": 128,
+        "tau": 0.005,
+        "noise_std": 0.1,
+    }
+
+    hyperparams = [
+        default_params,
+        {**default_params, "learning_rate": 0.0003},
+        {**default_params, "learning_rate": 0.003},
+        {**default_params, "gamma": 0.95},
+        {**default_params, "gamma": 0.999},
+        {**default_params, "buffer_size": 50000},
+        {**default_params, "buffer_size": 200000},
+        {**default_params, "batch_size": 64},
+        {**default_params, "batch_size": 256},
+        {**default_params, "tau": 0.001},
+        {**default_params, "tau": 0.01},
+        # {**default_params, "noise_std": 0.2}, both had poor performance
+        # {**default_params, "noise_std": 0.3}, ^^
     ]
 
     if args.mode == "train":
-        base_log_dir = "logs/humanoid/DDPG"
-        base_model_dir = "humanoid_models/DDPG"
+        base_log_dir = "logs/pusher/DDPG"
+        base_model_dir = "pusher_models/DDPG"
         os.makedirs(base_log_dir, exist_ok=True)
         os.makedirs(base_model_dir, exist_ok=True)
 
